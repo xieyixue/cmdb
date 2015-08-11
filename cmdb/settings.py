@@ -76,8 +76,12 @@ WSGI_APPLICATION = 'cmdb.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': os.path.join(BASE_DIR, 'cmdb'),
+        'USER':'python',
+        'PASSWORD':'!py@xyx',
+        'HOST':'123.57.14.168',
+        'PORT':'3306',
     }
 }
 
