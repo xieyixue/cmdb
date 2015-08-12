@@ -6,9 +6,9 @@ class Server(models.Model):
     ip=models.GenericIPAddressField()
     cpu_slot_count=models.IntegerField(default=1)
     memory_slot_count=models.IntegerField(default=1)
-    cpu=models.ForeignKey('Cpu')
-    memory=models.ForeignKey('Memory')
-    disk=models.ForeignKey('Disk')
+    cpu=models.ForeignKey('Cpu',null=True)
+    memory=models.ForeignKey('Memory',null=True)
+    disk=models.ForeignKey('Disk',null=True)
 
     def __unicode__(self):
         return self.hostname
