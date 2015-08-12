@@ -6,12 +6,21 @@ class Server(models.Model):
     ip=models.GenericIPAddressField()
     cpu_slot_count=models.IntegerField(default=1)
     memory_slot_count=models.IntegerField(default=1)
+
+    interface=models.ForeignKey("Interface",null=True)
     cpu=models.ForeignKey('Cpu',null=True)
     memory=models.ForeignKey('Memory',null=True)
     disk=models.ForeignKey('Disk',null=True)
 
     def __unicode__(self):
         return self.hostname
+
+class Interface(models.Model):
+    name = models.CharField(max_length=200)
+    ipaddr = models.GenericIPAddressField()
+    netmask = models.CharField(max_length=200)
+    mac = models.CharField(max_length=200)
+
 
 class Cpu(models.Model):
     cpu_speed=models.IntegerField(default=1)
