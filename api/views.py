@@ -33,7 +33,7 @@ def create_server(request):
             "memory_size":4000
             },
             {
-            "memory_speed":1300,
+            "memory_speed":1301,
             "memory_size":4000
         }
         ]
@@ -71,15 +71,28 @@ def create_server(request):
 
         for cpu_info in cpus:
             print cpu_info["id"]
-            cpu_count = models.Cpu.objects.filter(**cpu_info).count()
+            cpu_obj = models.Cpu.objects.filter(**cpu_info)
+            cpu_count = cpu_obj.count()
             if cpu_count ==0:
-                cpu = models.Cpu(**cpu_info)
-                cpu.save()
-                server_obj.cpu = cpu
+                cpu_insert = models.Cpu(**cpu_info)
+                cpu_insert.save()
+                cpu_obj = models.Cpu.objects.filter(**cpu_info)
             else:
                 pass
+            server_obj.cpu_info_id = 2
+            server_obj.save()
 
-
+        for memory_info in memorys:
+            memory_obj = models.Memory.objects.filter(**memory_info)
+            memory_count = memory_obj.count()
+            print memory_count,'ss'
+            if memory_count == 0:
+                memory_insert = models.Memory(**memory_info)
+                memory_insert.save()
+                memory_obj = models.Memory.objects.filter(**memory_info)
+            #server_obj.memory = memory_obj
+            print server_obj.memory.get()
+            server_obj.memory.add(memory_obj)
         result = json.dumps(data)
     else:
         result = "Plase POST data"
