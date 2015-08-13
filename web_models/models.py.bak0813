@@ -2,24 +2,16 @@
 # -*- coding:utf-8 -*-
 
 from django.db import models
-import datetime
+from django.utils import timezone
 
 
-class UserType(models.Model):
-    caption = models.CharField(max_length=32)
-    code = models.CharField(max_length=32)
-
-    def __unicode__(self):
-        return self.caption
 
 class UserProfile(models.Model):
 
-    user_type = models.ForeignKey('UserType')
     name = models.CharField(u'名字', max_length=32)
     email = models.EmailField(u'邮箱')
     phone = models.CharField(u'座机', max_length=50)
     mobile = models.CharField(u'手机', max_length=32)
-
 
     memo = models.TextField(u'备注', blank=True)
     create_at = models.DateTimeField(blank=True, auto_now_add=True)
@@ -41,28 +33,20 @@ class AdminInfo(models.Model):
 
 class Status(models.Model):
     name = models.CharField(max_length=64)
-    code = models.CharField(max_length=64)
     memo = models.TextField(u'备注', null=True, blank=True)
-
-    def __unicode__(self):
-        return self.name
 
 
 class DeviceType(models.Model):
 
     name = models.CharField(max_length=128)
-    code = models.CharField(max_length=64)
     memo = models.CharField(max_length=256,null=True,blank=True)
     create_at = models.DateTimeField(blank=True, auto_now_add=True)
     update_at = models.DateTimeField(blank=True, auto_now=True)
 
-    def __unicode__(self):
-        return self.name
-
 
 class Tag(models.Model):
 
-    name = models.CharField('Tag name', max_length=32, unique=True)
+    name = models.CharField('Tag name',max_length=32,unique=True)
 
     memo = models.TextField(u'备注', blank=True)
     create_at = models.DateTimeField(blank=True, auto_now_add=True)
@@ -73,63 +57,47 @@ class Tag(models.Model):
 
 
 class Asset(models.Model):
+
     device_type = models.ForeignKey('DeviceType')
 
     device_status = models.ForeignKey('Status')
 
-    cabinet_num = models.CharField(u'机柜号', max_length=30, null=True, blank=True)
-    cabinet_order = models.CharField(u'机柜中序号', max_length=30, null=True, blank=True)
+    cabinet_num = models.CharField(u'机柜号',max_length=30,null=True, blank=True)
+    cabinet_order = models.CharField(u'机柜中序号',max_length=30,null=True, blank=True)
 
     memo = models.TextField(u'备注', null=True, blank=True)
     create_at = models.DateTimeField(blank=True, auto_now_add=True)
     update_at = models.DateTimeField(blank=True, auto_now=True)
 
-    idc = models.ForeignKey('IDC', verbose_name=u'IDC机房', null=True, blank=True)
-    contract = models.ForeignKey('Contract', verbose_name=u'合同', null=True, blank=True)
-    business_unit = models.ForeignKey('BusinessUnit', verbose_name=u'属于的业务线', null=True, blank=True)
+    idc = models.ForeignKey('IDC', verbose_name=u'IDC机房',null=True, blank=True)
+    contract = models.ForeignKey('Contract', verbose_name=u'合同',null=True, blank=True)
+    business_unit = models.ForeignKey('BusinessUnit', verbose_name=u'属于的业务线',null=True, blank=True)
 
-    manage_user = models.ForeignKey('UserProfile', verbose_name=u'基础运维', related_name='+', null=True, blank=True)
+    manage_user = models.ForeignKey('UserProfile', verbose_name=u'设备管理员',related_name='+',null=True, blank=True)
 
-    tag = models.ManyToManyField('Tag', null=True, blank=True)
-
-    latest_date = models.DateField(null=True, blank=True)
+    tag = models.ManyToManyField('Tag')
 
     class Meta:
         verbose_name = '资产总表'
         verbose_name_plural = "资产总表"
 
     def __unicode__(self):
-        try:
-            manage_ip = self.server.manage_ip
-        except: 
-            manage_ip = '0.0.0.0'
-        return manage_ip
+        return 'id:%s h:%s' %(self.id)
 
 
 class Server(models.Model):
-    asset = models.OneToOneField('Asset')
+    asset = models.OneToOneField(u"Asset",null=True)
+    hostname = models.CharField(max_length=128, blank=True, unique=True)
+    sn = models.CharField(u'SN号',null=True,max_length=64)
+    manufactory = models.CharField(verbose_name=u'制造商',max_length=128,null=True, blank=True)
+    model = models.CharField(u'型号',max_length=128,null=True, blank=True )
 
-    hostname = models.CharField(max_length=128, blank=True, null=True)
-    service_sn = models.CharField(u'快速服务编码', max_length=128, blank=True,null=True)
-    sn = models.CharField(u'SN号', max_length=64, blank=True, null=True)
-    manufactory = models.CharField(verbose_name=u'制造商', max_length=128, null=True, blank=True)
-    model = models.CharField(u'型号', max_length=128, null=True, blank=True)
+    cpu_count = models.IntegerField(null=True, blank=True)
+    cpu_physical_count = models.IntegerField(null=True, blank=True)
+    cpu_model = models.CharField(max_length=128,null=True, blank=True)
 
-
-    manage_ip = models.GenericIPAddressField(u'管理IP',null=True, blank=True)
-    business_ip = models.GenericIPAddressField(u'业务IP',null=True, blank=True)
-
-    os_platform = models.CharField(u'系统', max_length=64, null=True, blank=True)
-    os_version = models.CharField(u'系统版本', max_length=64, null=True, blank=True)
-
-    cpu_count = models.IntegerField(u'CPU核心数',null=True, blank=True)
-    cpu_physical_count = models.IntegerField(u'物理CPU数',null=True, blank=True)
-    cpu_model = models.CharField(max_length=128, null=True, blank=True)
-
-    first_mac = models.CharField(u'MAC地址',max_length=128, null=True, blank=True)
-
-    create_at = models.DateTimeField(blank=True, auto_now_add=True)
-    update_at = models.DateTimeField(blank=True, auto_now=True)
+    create_at = models.DateTimeField(blank=True,null=True, auto_now_add=True)
+    update_at = models.DateTimeField(blank=True,null=True, auto_now=True)
 
     class Meta:
         verbose_name = '服务器'
@@ -140,18 +108,11 @@ class Server(models.Model):
         return '%s,%s,%s,%s,%s,%s,%s' %(self.hostname,self.sn,self.manufactory,self.model,self.cpu_count,self.cpu_physical_count,self.cpu_model)
 
 
-class OsInstall(models.Model):
-    hostname = models.CharField(max_length=128)
-    ip = models.GenericIPAddressField()
-    server = models.ForeignKey('Server')
-    creator = models.ForeignKey('UserProfile')
-    create_at = models.DateTimeField(blank=True, auto_now_add=True)
-
-
 class NetworkDevice(models.Model):
     asset = models.OneToOneField('Asset')
     sn = models.CharField(u'SN号',max_length=64,unique=True)
 
+    '''
     asset = models.OneToOneField('Asset')
     management_ip = models.CharField(u'管理IP',max_length=64,blank=True,null=True)
     vlan_ip = models.CharField(u'VlanIP',max_length=64,blank=True,null=True)
@@ -164,6 +125,7 @@ class NetworkDevice(models.Model):
     class Meta:
         verbose_name_plural = "网络设备"
         verbose_name = '网络设备'
+    '''
 
 
 class Memory(models.Model):
@@ -171,13 +133,13 @@ class Memory(models.Model):
     slot = models.CharField(u'插槽位',max_length=32,blank=True)
     manufactory = models.CharField(u'制造商', max_length=32,null=True,blank=True)
     model = models.CharField(u'型号', max_length=64,blank=True)
-    capacity =  models.FloatField(u'容量',blank=True)
+    capacity =  models.FloatField(u'容量',null=True,blank=True)
     sn = models.CharField(max_length=256,null=True,blank=True,default='')
     speed = models.CharField(max_length=64,null=True,blank=True,default='')
     memo = models.TextField(u'备注', blank=True)
-    create_at = models.DateTimeField(blank=True, auto_now_add=True)
-    update_at = models.DateTimeField(blank=True, auto_now=True)
-    server_info = models.ForeignKey('server')
+    create_at = models.DateTimeField(blank=True, auto_now_add=True,null=True)
+    update_at = models.DateTimeField(blank=True, auto_now=True,null=True)
+    server_info = models.ForeignKey('server', null=True)
 
     class Meta:
         verbose_name = '内存部件'
@@ -190,7 +152,7 @@ class Memory(models.Model):
 class NIC(models.Model):
     name = models.CharField(u'网卡名称',max_length=128,blank=True)
     hwaddr = models.CharField(u'网卡mac地址', max_length=64)
-    up = models.BooleanField(default=False)
+    up = models.BooleanField()
     netmask = models.CharField(max_length=64,blank=True)
 
     ipaddrs = models.CharField(u'ip地址',max_length=256,null=True)
@@ -214,29 +176,28 @@ class Disk(models.Model):
     slot = models.CharField(u'插槽位',max_length=32,blank=True)
 
     model = models.CharField(u'磁盘型号', max_length=128,blank=True)
-    capacity = models.FloatField(u'磁盘容量GB',blank=True)
+    capacity = models.FloatField(u'磁盘容量GB',null=True,blank=True)
     pd_type = models.CharField(u'磁盘类型', max_length=64,blank=True)
 
     memo = models.TextField(u'备注', blank=True)
-    create_at = models.DateTimeField(blank=True, auto_now_add=True)
-    update_at = models.DateTimeField(blank=True, auto_now=True)
+    create_at = models.DateTimeField(auto_now_add=True,blank=True,null=True)
+    update_at = models.DateTimeField(blank=True, auto_now=True,null=True)
 
-    server_info = models.ForeignKey('server')
+    server_info = models.ForeignKey('server',null=True)
 
     def __unicode__(self):
         return 'slot:%s size:%s' % (self.slot,self.capacity)
 
 
 class IDC(models.Model):
-    region = models.CharField(u'区域中文',max_length=64)
-    name = models.CharField(u'中文显示名',max_length=32)
+    region_display_name = models.CharField(u'区域中文',max_length=64,default="")
+    display_name = models.CharField(u'中文显示名',max_length=32,default="")
     floor = models.IntegerField(u'楼层',default=1)
-    display = models.CharField(max_length=128)
     memo = models.CharField(u'备注',max_length=64)
 
     def __unicode__(self):
-        return 'region:%s idc:%s floor:%s' %(self.region,
-                                                    self.name,
+        return 'region:%s idc:%s floor:%s' %(self.region_display_name,
+                                                    self.display_name,
                                                     self.floor)
 
     class Meta:
@@ -250,7 +211,7 @@ class Contract(models.Model):
     cost = models.IntegerField(u'合同金额')
     start_date = models.DateTimeField(blank=True)
     end_date = models.DateTimeField(blank=True)
-    license_num = models.IntegerField(u'license数量', blank=True)
+    license_num = models.IntegerField(u'license数量',blank=True)
     memo = models.TextField(u'备注', blank=True)
     create_at = models.DateTimeField(blank=True, auto_now_add=True)
     update_at = models.DateTimeField(blank=True, auto_now=True)
@@ -277,10 +238,10 @@ class BusinessUnit(models.Model):
 
 
 class HandleLog(models.Model):
-    asset_info = models.ForeignKey('Asset')
-    content = models.TextField(null=True, blank=True)
+    server_info = models.ForeignKey('Server')
+    content = models.TextField()
     creator = models.ForeignKey('UserProfile')
-    create_at = models.DateTimeField(auto_now_add=True)
+    create_at = models.DateTimeField(blank=True, auto_now_add=True)
 
     def __unicode__(self):
         return self.content
@@ -288,5 +249,3 @@ class HandleLog(models.Model):
 
 class ErrorLog(models.Model):
     name = models.CharField(max_length=256)
-
-
