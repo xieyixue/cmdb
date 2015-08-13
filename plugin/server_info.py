@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
-#!/usr/bin/env python
-#coding=utf-8
 import os
 
 def hostname():
@@ -34,4 +32,14 @@ def cpu_slot_count():
     else:
         return 0
 
-#print hostname()
+def sn_number():
+    sys = os.name
+    if sys == "posix":
+        num = os.popen("dmidecode | grep 'Serial Nu' | head -n 1 | awk '{print $NF}' ")
+    else:
+        num = 0
+    return num
+
+print hostname()
+print memory_slot_count()
+print cpu_slot_count()

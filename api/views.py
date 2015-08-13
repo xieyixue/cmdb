@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+#-*-coding:utf-8-*-
 from django.shortcuts import render
 from django.shortcuts import HttpResponse
 
@@ -8,9 +10,15 @@ def create_server(request):
     '''
     data ={"data":{
         "hostname":"hostname1",
-        "ip":"127.0.0.1",
-        "cpu_slot_count":2,
+        "server_sn":"9781cc98-17eb-4e51-ad4e-fa60e1d549be",
+        "manufactory":"dell",
+        "manage_ip":"192.168.2.200",
+        "cpu_count":4,
+        "cpu_physical_count":2,
+        "first_mac":"00:16:3e:00:1d:cc",
         "memory_slot_count":2,
+         }
+        }
         "cpus":[{
             "id":1,
             "cpu_speed":1.5,
@@ -40,59 +48,50 @@ def create_server(request):
      }
     }
     '''
+
+
+    '''
+    {
+    "hostname": "c1.text.com",
+    "sn": "9781cc98-17eb-4e51-ad4e-fa60e1d549be",
+    "manufactory": "dell",
+    "manage_ip": "192.168.2.200",
+    "cpu_count": 4,
+    "cpu_physical_count": 2,
+    "first_mac": "00:16:3e:00:1d:cc"
+
+}
+    '''
     if request.method == "POST":
         data = request.POST.get("data","")
-        #print(data)
         data = json.loads(data)
-        print(data)
         server_info = data
 
         hostname = server_info["hostname"]
-        ip = server_info["ip"]
-        memory_slot_count = server_info["memory_slot_count"]
-        cpu_slot_count = server_info["cpu_slot_count"]
+        ip = server_info["manage_ip"]
+        cpu_physical_count = server_info["cpu_physical_count"]
+        cpu_count = server_info["cpu_count"]
 
-
-        cpus = server_info["cpus"]
-        interfaces = server_info["interfaces"]
-        memorys = server_info["memorys"]
-        server_info.pop("cpus")
-        server_info.pop("interfaces")
-        server_info.pop("memorys")
 
         server_obj = models.Server.objects.filter(hostname=hostname)
         server_count = server_obj.count()
 
         if server_count == 0:
-            server = models.Server(**server_info)
+            #device_type_obj = models.DeviceType.(name=u'服务器')
+            ##device_type_obj.save()
+            #device_status_obj = models.Status.(name=u'线下')
+
+            Asset_obj = models.Asset.objects.filter(device_type_id=1,device_status_id=1)
+            #Asset_obj.device_status = device_status_obj
+            #Asset_obj.device_type = device_type_obj
+            #Asset_obj = models.Asset(device_status=device_status_obj,device_type=device_type_obj)
+
+            server = models.Server(asset=Asset_obj,**server_info)
             server.save()
         else:
             print server_count
 
-        for cpu_info in cpus:
-            print cpu_info["id"]
-            cpu_obj = models.Cpu.objects.filter(**cpu_info)
-            cpu_count = cpu_obj.count()
-            if cpu_count ==0:
-                cpu_insert = models.Cpu(**cpu_info)
-                cpu_insert.save()
-                cpu_obj = models.Cpu.objects.filter(**cpu_info)
-            else:
-                pass
-            server_obj.cpu_info_id = 2
-            server_obj.save()
 
-        for memory_info in memorys:
-            memory_obj = models.Memory.objects.filter(**memory_info)
-            memory_count = memory_obj.count()
-            print memory_count,'ss'
-            if memory_count == 0:
-                memory_insert = models.Memory(**memory_info)
-                memory_insert.save()
-                memory_obj = models.Memory.objects.filter(**memory_info)
-            #server_obj.memory = memory_obj
-            print server_obj.memory.get()
-            server_obj.memory.add(memory_obj)
         result = json.dumps(data)
     else:
         result = "Plase POST data"
